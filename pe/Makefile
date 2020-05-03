@@ -7,7 +7,7 @@ TEST_SRC_DIR=test
 
 CXXFLAGS=/nologo /std:c++latest /Oi- /O1 /GS- /Gy- /GR- /c /I$(INCLUDE_DIR)
 CXXFLAGS2=/nologo /EHsc /std:c++latest /c
-LDFLAGS=/nologo /nodefaultlib /incremental:no /subsystem:console,5.01 /entry:Main /safeseh:no /EMITPOGOPHASEINFO /merge:.rdata=.text
+LDFLAGS=/nologo /nodefaultlib /incremental:no /subsystem:console,5.01 /entry:Main /safeseh:no /EMITPOGOPHASEINFO /merge:.rdata=.text /align:16
 LDFLAGS2=/nologo
 LIBFLAGS=/nologo /nodefaultlib /subsystem:windows,5.01
 

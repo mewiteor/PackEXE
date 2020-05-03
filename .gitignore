@@ -33,6 +33,7 @@
 
 # vim backup
 *.un~
+*.swp
 
 # build/bin dir
 windows/bin/*
