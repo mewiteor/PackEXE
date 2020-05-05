@@ -1,22 +1,29 @@
 #include <windows.h>
-#include <compressapi.h>
+#include <LzmaLib.h>
 #include <memoryModule.h>
 
-EXTERN_C unsigned int g_algo;
 EXTERN_C unsigned int g_size;
+EXTERN_C unsigned int g_data_size;
+EXTERN_C unsigned int g_props_size;
+EXTERN_C unsigned char g_props[];
 EXTERN_C unsigned char g_data[];
 
 EXTERN_C int Main()
 {
-    DECOMPRESSOR_HANDLE h;
-    if(!CreateDecompressor(g_algo, nullptr, &h))
-        return 1;
-    SIZE_T size;
-    Decompress(h, g_data, g_size, nullptr, 0, &size);
+    size_t size = g_size;
     void *data = HeapAlloc(GetProcessHeap(), 0, size);
-    auto b = Decompress(h, g_data, g_size, data, size, &size);
-    CloseDecompressor(h);
-    if(b)
+    int n = LzmaUncompress((PBYTE)data, &size, g_data, &g_data_size, g_props, g_props_size);
+    if(n)
+    {
+        char buf[0x100];
+        wsprintfA(buf, "n: %d", n);
+        MessageBoxA(NULL, buf, "LzmaUncompress", MB_ICONERROR);
+        return 1;
+    }
+    if(size != g_size)
+    {
+        MessageBoxA(NULL, "size error", NULL, MB_ICONERROR);
+    }
     {
         MemoryModule mm;
         mm.Load(data, size);

@@ -1,14 +1,8 @@
 #include <Windows.h>
 #include <tchar.h>
-#include <compressapi.h>
-#include <fstream>
 #include <iostream>
-#include <filesystem>
 #include <memory>
-#include <vector>
-#include <string>
-#include <iomanip>
-#include <cassert>
+#include <LzmaLib.h>
 
 // 输出错误信息
 #ifndef __FUNCTION__
@@ -40,67 +34,51 @@ int main(int argc, char *argv[])
         cerr<<"unsupported yet"<<endl;
     }
     size_t size = 0;
-    unique_ptr<char[]> buf;
+    unique_ptr<unsigned char[]> buf;
     {
-        ifstream ifs(argv[2], ios::binary);
-        size = (size_t)filesystem::file_size(filesystem::path(argv[2]));
-        buf = unique_ptr<char[]>(new char[size]);
-        ifs.read(buf.get(), size);
+        FILE *f = fopen(argv[2], "rb");
+        if(f)
+        {
+            fseek(f, 0, SEEK_END);
+            size = ftell(f);
+            fseek(f, 0, SEEK_SET);
+            buf = unique_ptr<unsigned char[]>(new unsigned char[size]);
+            fread(buf.get(), 1, size, f);
+            fclose(f);
+        }
     }
 
-    DWORD finalAlgo = 0;
-    vector<unsigned char> finalData;
-    for(DWORD algo = 2; algo <= 5; algo++)
+    size_t dest_size=size + size / 3 + 128;
+    unique_ptr<unsigned char[]> dest(new unsigned char[dest_size]);
+    unsigned char props[LZMA_PROPS_SIZE]={0};
+    size_t propsSize = LZMA_PROPS_SIZE;
+    int n = LzmaCompress(dest.get(), &dest_size, buf.get(), size,
+            props, &propsSize, 9, 0, -1,-1,-1,-1,-1);
+    if(n != SZ_OK)
     {
-        // cout<<"algo: "<<algo<<endl;
-        COMPRESSOR_HANDLE h = nullptr;
-        if(!CreateCompressor(algo, nullptr, &h))
-        {
-            E("CreateCompressor");
-            continue;
-        }
-        // cout<<"\tCreateCompressor: success"<<endl;
-        SIZE_T compSize = 0;
-        assert(!Compress(h, buf.get(), size, nullptr, 0, &compSize));
-        if(!compSize)
-        {
-            CloseCompressor(h);
-            cerr<<"algo("<<algo<<"): compSize is zero!"<<endl;
-            continue;
-        }
-        // cout<<"\tCompress 1: success"<<endl;
-        unique_ptr<unsigned char[]> tmp_buf(new unsigned char[compSize]);
-        auto b = Compress(h, buf.get(), size, tmp_buf.get(), compSize, &compSize);
-        CloseCompressor(h);
-        if(!b)
-        {
-            cerr<<"algo: "<<algo<<endl;
-            E("Compress");
-            continue;
-        }
-        // cout<<"\tCompress 2: success"<<endl;
-        if(!finalAlgo || finalData.size() > compSize)
-        {
-            // cout<<"\tupdate final data"<<endl;
-            finalData.clear();
-            finalData.insert(finalData.end(), tmp_buf.get(), tmp_buf.get() + compSize);
-            finalAlgo = algo;
-        }
-    }
-    if(!finalAlgo)
+        cerr << "LzmaCompress error: " << n << endl;
         return 1;
-
-    ofstream ofs(argv[1]);
-    ofs << "extern unsigned int g_algo = " << finalAlgo << ";\n"
-        << "extern unsigned int g_size = " << (unsigned int)finalData.size() << ";\n"
-        << "extern unsigned char g_data[] = {";
-    for(auto it = finalData.begin(); it != finalData.end(); ++it)
-    {
-        if(it != finalData.begin())
-            ofs << ",";
-        ofs<<(unsigned int)*it;
     }
-    ofs<<"};";
+
+    {
+        FILE *f = fopen(argv[1], "w");
+        if(f)
+        {
+            fprintf(f,
+                    "extern unsigned int g_size = %u;\n"
+                    "extern unsigned int g_data_size = %u;\n"
+                    "extern unsigned int g_props_size = %u;\n"
+                    "extern unsigned char g_props[] = {",
+                    size, dest_size, propsSize);
+            for(size_t i = 0; i < propsSize; i++)
+                fprintf(f, !i + ",%hu", (unsigned short)props[i]);
+            fputs("};\nextern unsigned char g_data[] = {\n", f);
+            for(size_t i = 0; i < dest_size; i++)
+                fprintf(f, 2*!i + ",\n%hu", (unsigned short)dest[i]);
+            fputs("\n};", f);
+            fclose(f);
+        }
+    }
     return 0;
 }
 
