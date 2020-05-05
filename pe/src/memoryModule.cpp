@@ -121,6 +121,16 @@ private:
 	NameIdx* exportTables;
 };
 
+class MyLib : public Lib
+{
+    public:
+        MyLib(HMODULE h) : h(h) {}
+        virtual ~MyLib();
+        virtual void *GetProcAddress(const char *);
+    private:
+        HMODULE h;
+};
+
 MemoryModule::MemoryModule()
 	: impl(nullptr)
 {
@@ -158,20 +168,25 @@ void * MemoryModule::GetProcAddress(const char *funcName)
 	return impl->GetProcAddress(funcName);
 }
 
-void * MemoryModule::OriLoadLibrary(const char *moduleName)
+Lib * MemoryModule::LoadLibrary(const char *moduleName)
 {
-	return LoadLibraryA(moduleName);
+    HMODULE h = ::LoadLibraryA(moduleName);
+    Lib *r = new MyLib(h);
+	return r;
 }
 
-void * MemoryModule::OriGetProcAddress(void *module, const char *funcName)
+void * MyLib::GetProcAddress(const char *funcName)
 {
-	return ::GetProcAddress((HMODULE)module, funcName);
+	return ::GetProcAddress(h, funcName);
 }
 
-void MemoryModule::OriFreeLibrary(void *module)
+MyLib::~MyLib()
 {
-	::FreeLibrary((HMODULE)module);
+	::FreeLibrary(h);
 }
+
+Lib::~Lib()
+{}
 
 void MemoryModule::clear()
 {
@@ -337,8 +352,8 @@ bool MemoryModuleImpl::BuildImportTable()
 	auto importDesc = OffsetPointer(PIMAGE_IMPORT_DESCRIPTOR, image, dir.VirtualAddress);
 	for (; !IsBadReadPtr(importDesc, sizeof(IMAGE_IMPORT_DESCRIPTOR)) && importDesc->Name; importDesc++)
 	{
-		void *handle = _.OriLoadLibrary(OffsetPointer(const char *, image, importDesc->Name));
-		XASSERT(handle, false, "OriLoadLibraryÊ§°Ü");
+		Lib *handle = _.LoadLibrary(OffsetPointer(const char *, image, importDesc->Name));
+		XASSERT(handle, false, "LoadLibraryÊ§°Ü");
         modules.Push(handle);
 		auto funcRef = OffsetPointer(FARPROC*, image, importDesc->FirstThunk);
 		auto thunkRef = (uintptr_t *)funcRef;
@@ -347,11 +362,11 @@ bool MemoryModuleImpl::BuildImportTable()
 		for (; *thunkRef; thunkRef++, funcRef++)
 		{
 			if (IMAGE_SNAP_BY_ORDINAL(*thunkRef))
-				*funcRef = (FARPROC)_.OriGetProcAddress(handle, (LPCSTR)IMAGE_ORDINAL(*thunkRef));
+				*funcRef = (FARPROC)handle->GetProcAddress((LPCSTR)IMAGE_ORDINAL(*thunkRef));
 			else
 			{
 				auto thunkData = OffsetPointer(PIMAGE_IMPORT_BY_NAME, image, *thunkRef);
-				*funcRef = (FARPROC)_.OriGetProcAddress(handle, (LPCSTR)&thunkData->Name);
+				*funcRef = (FARPROC)handle->GetProcAddress((LPCSTR)&thunkData->Name);
 			}
 			XASSERT(*funcRef, false, "µ¼Èëº¯ÊıÊ§°Ü");
 		}

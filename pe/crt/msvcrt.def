@@ -7,3 +7,4 @@ memmove
 memcpy
 _beginthreadex
 _except_handler3
+_purecall

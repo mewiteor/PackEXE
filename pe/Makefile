@@ -52,16 +52,20 @@ LIBFLAGS=/nologo /nodefaultlib /subsystem:windows,5.01
 
 all: $(BIN_DIR)\test.exe
 
-$(BIN_DIR)\test.exe: $(TEST_SRC_DIR)\test.cpp $(BUILD_DIR)\pack.lib $(BUILD_DIR)\compress.exe Makefile
+$(BIN_DIR)\test.exe: $(TEST_SRC_DIR)\test.cpp $(TEST_SRC_DIR)\testdll.cpp $(TEST_SRC_DIR)\testdll2.cpp $(BUILD_DIR)\pack.lib $(BUILD_DIR)\compress.exe Makefile
+	@cl $(CXXFLAGS2) /Fo$(BUILD_DIR)\testdll.obj $(TEST_SRC_DIR)\testdll.cpp
+	@link $(LDFLAGS2) /dll /OUT:$(BUILD_DIR)\testdll.dll /implib:$(BUILD_DIR)\testdll.lib $(BUILD_DIR)\testdll.obj
+	@cl $(CXXFLAGS2) /Fo$(BUILD_DIR)\testdll2.obj $(TEST_SRC_DIR)\testdll2.cpp
+	@link $(LDFLAGS2) /dll /OUT:$(BUILD_DIR)\testdll2.dll /implib:$(BUILD_DIR)\testdll2.lib $(BUILD_DIR)\testdll2.obj
 	@cl $(CXXFLAGS2) /Fo$(BUILD_DIR)\test.obj $(TEST_SRC_DIR)\test.cpp
-	@link $(LDFLAGS2) /OUT:$(BUILD_DIR)\test.exe $(BUILD_DIR)\test.obj
+	@link $(LDFLAGS2) /OUT:$(BUILD_DIR)\test.exe $(BUILD_DIR)\test.obj $(BUILD_DIR)\testdll.lib $(BUILD_DIR)\testdll2.lib
 	@$(BUILD_DIR)\compress.exe $(BUILD_DIR)\test.c $(BUILD_DIR)\test.exe
 	@cl $(CXXFLAGS) $(BUILD_DIR)\test.c /Fo$(BUILD_DIR)\test.obj
 	@link $(LDFLAGS) /OUT:$(BIN_DIR)\test.exe $(BUILD_DIR)\test.obj $(BUILD_DIR)\pack.lib
 
 $(BUILD_DIR)\compress.exe: $(SRC_DIR)\compress.cpp $(BUILD_DIR)\LzmaLib.lib Makefile
 	@cl $(CXXFLAGS2) /Fo$(BUILD_DIR)\compress.obj $(SRC_DIR)\compress.cpp
-	@link $(LDFLAGS2) /OUT:$(BUILD_DIR)\compress.exe $(BUILD_DIR)\compress.obj $(BUILD_DIR)\LzmaLib.lib
+	@link $(LDFLAGS2) /OUT:$(BUILD_DIR)\compress.exe $(BUILD_DIR)\compress.obj $(BUILD_DIR)\LzmaLib.lib imagehlp.lib shlwapi.lib
 
 $(BUILD_DIR)\pack.lib: $(BUILD_DIR)\loader.obj $(BUILD_DIR)\memoryModule.obj $(BUILD_DIR)\LzmaLib.lib $(BUILD_DIR)\ntdll.lib $(BUILD_DIR)\msvcrt.lib Makefile
 	@lib $(LIBFLAGS) /OUT:$(BUILD_DIR)\pack.lib $(BUILD_DIR)\loader.obj $(BUILD_DIR)\memoryModule.obj $(BUILD_DIR)\LzmaLib.lib $(BUILD_DIR)\ntdll.lib $(BUILD_DIR)\msvcrt.lib kernel32.lib user32.lib

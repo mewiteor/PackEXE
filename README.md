@@ -3,7 +3,7 @@ pack executable format files to one file
 
 - [x] support pe
 - - [x] support pack one exe file
-- - [ ] support pack one exe file and some dll files
+- - [x] support pack one exe file and some dll files
 - - [x] support pack with 3rd party compress library
 - - [ ] support pack with External encryption plug-ins
 - [ ] support elf

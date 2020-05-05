@@ -2,17 +2,21 @@
 
 class MemoryModuleImpl;
 
+struct Lib
+{
+    virtual ~Lib() = 0;
+    virtual void *GetProcAddress(const char *) = 0;
+};
+
 class MemoryModule
 {
 public:
 	MemoryModule();
-	~MemoryModule();
+	virtual ~MemoryModule();
 	bool Load(const void *data, size_t size);
 	void* GetProcAddress(const char *funcName);
 
-	virtual void *OriLoadLibrary(const char *);
-	virtual void *OriGetProcAddress(void*, const char *);
-	virtual void OriFreeLibrary(void*);
+    virtual Lib *LoadLibrary(const char *moduleName);
 private:
 	void clear();
 private:
