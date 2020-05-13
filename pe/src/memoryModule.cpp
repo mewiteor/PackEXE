@@ -76,6 +76,7 @@ public:
 		, size(size)
 		, image(nullptr)
 		, init(false)
+		, exportTables(nullptr)
 	{
         LOGF;
 	}

@@ -8,3 +8,4 @@ memcpy
 _beginthreadex
 _except_handler3
 _purecall
+__C_specific_handler

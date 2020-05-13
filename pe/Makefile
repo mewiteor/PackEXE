@@ -64,20 +64,20 @@ $(BIN_DIR)\test.exe: $(TEST_SRC_DIR)\test.cpp $(TEST_SRC_DIR)\testdll.cpp $(TEST
 	@link $(LDFLAGS) /OUT:$(BIN_DIR)\test.exe $(BUILD_DIR)\test.obj $(BUILD_DIR)\pack.lib
 
 $(BUILD_DIR)\compress.exe: $(SRC_DIR)\compress.cpp $(BUILD_DIR)\LzmaLib.lib Makefile
-	@cl $(CXXFLAGS2) /Fo$(BUILD_DIR)\compress.obj $(SRC_DIR)\compress.cpp
+	@cl $(CXXFLAGS2) /D_LZMA_NO_SYSTEM_SIZE_T /Fo$(BUILD_DIR)\compress.obj $(SRC_DIR)\compress.cpp
 	@link $(LDFLAGS2) /OUT:$(BUILD_DIR)\compress.exe $(BUILD_DIR)\compress.obj $(BUILD_DIR)\LzmaLib.lib imagehlp.lib shlwapi.lib
 
 $(BUILD_DIR)\pack.lib: $(BUILD_DIR)\loader.obj $(BUILD_DIR)\memoryModule.obj $(BUILD_DIR)\LzmaLib.lib $(BUILD_DIR)\ntdll.lib $(BUILD_DIR)\msvcrt.lib Makefile
 	@lib $(LIBFLAGS) /OUT:$(BUILD_DIR)\pack.lib $(BUILD_DIR)\loader.obj $(BUILD_DIR)\memoryModule.obj $(BUILD_DIR)\LzmaLib.lib $(BUILD_DIR)\ntdll.lib $(BUILD_DIR)\msvcrt.lib kernel32.lib user32.lib
 $(BUILD_DIR)\loader.obj: $(SRC_DIR)\loader.cpp $(INCLUDE_DIR)\memoryModule.h Makefile
-	@cl $(CXXFLAGS) /Fo$(BUILD_DIR)\loader.obj $(SRC_DIR)\loader.cpp
+	@cl $(CXXFLAGS) /D_LZMA_NO_SYSTEM_SIZE_T /Fo$(BUILD_DIR)\loader.obj $(SRC_DIR)\loader.cpp
 $(BUILD_DIR)\memoryModule.obj: $(SRC_DIR)\memoryModule.cpp $(INCLUDE_DIR)\memoryModule.h Makefile
 	@cl $(CXXFLAGS) /Fo$(BUILD_DIR)\memoryModule.obj $(SRC_DIR)\memoryModule.cpp
 
 $(BUILD_DIR)\ntdll.lib: $(CRT_DIR)\ntdll.def Makefile
-	@lib $(LIBFLAGS) /machine:x86 /out:$(BUILD_DIR)\ntdll.lib /def:$(CRT_DIR)\ntdll.def
+	@lib $(LIBFLAGS) /out:$(BUILD_DIR)\ntdll.lib /def:$(CRT_DIR)\ntdll.def
 $(BUILD_DIR)\msvcrt.lib: $(CRT_DIR)\msvcrt.def Makefile
-	@lib $(LIBFLAGS) /machine:x86 /out:$(BUILD_DIR)\msvcrt.lib /def:$(CRT_DIR)\msvcrt.def
+	@lib $(LIBFLAGS) /out:$(BUILD_DIR)\msvcrt.lib /def:$(CRT_DIR)\msvcrt.def
 
 $(BUILD_DIR)\LzmaLib.lib:$(LZMA_CS) $(LZMA_CCS) $(LZMA_HS) Makefile
 	@for %i in ($(LZMA_SRC_DIR)\*.c) do @cl $(CFLAGS) /O1 /Fo$(BUILD_DIR)\ %i

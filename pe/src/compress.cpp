@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
                     "extern unsigned int g_data_size = %u;\n"
                     "extern unsigned int g_props_size = %u;\n"
                     "extern unsigned char g_props[] = {",
-                    buf.size(), dest_size, propsSize);
+                    (UInt32)buf.size(), (UInt32)dest_size, (UInt32)propsSize);
             for(size_t i = 0; i < propsSize; i++)
                 fprintf(f, !i + ",%hu", (unsigned short)props[i]);
             fputs("};\nextern unsigned char g_data[] = {\n", f);
