@@ -50,18 +50,28 @@ LDFLAGS=/nologo /nodefaultlib /incremental:no /subsystem:console,5.01 /entry:Mai
 LDFLAGS2=/nologo
 LIBFLAGS=/nologo /nodefaultlib /subsystem:windows,5.01
 
+TO_PACK=$(BUILD_DIR)\test.exe
+BIN_PACK=$(BIN_DIR)\test.exe
+
 all: $(BIN_DIR)\test.exe
 
-$(BIN_DIR)\test.exe: $(TEST_SRC_DIR)\test.cpp $(TEST_SRC_DIR)\testdll.cpp $(TEST_SRC_DIR)\testdll2.cpp $(BUILD_DIR)\pack.lib $(BUILD_DIR)\compress.exe Makefile
+pack: $(TO_PACK) $(BUILD_DIR)\pack.lib $(BUILD_DIR)\compress.exe Makefile
+	@echo TO_PACK: $(TO_PACK)
+	@echo BIN_PACK: $(BIN_PACK)
+	@$(BUILD_DIR)\compress.exe $(BUILD_DIR)\test.c $(TO_PACK)
+	@cl $(CXXFLAGS) $(BUILD_DIR)\test.c /Fo$(BUILD_DIR)\test.obj
+	@link $(LDFLAGS) /OUT:$(BIN_PACK) $(BUILD_DIR)\test.obj $(BUILD_DIR)\pack.lib
+
+$(BIN_DIR)\test.exe: $(BUILD_DIR)\test.exe $(BUILD_DIR)\pack.lib $(BUILD_DIR)\compress.exe Makefile
+	@nmake pack
+
+$(BUILD_DIR)\test.exe: $(TEST_SRC_DIR)\test.cpp $(TEST_SRC_DIR)\testdll.cpp $(TEST_SRC_DIR)\testdll2.cpp $(BUILD_DIR)\pack.lib $(BUILD_DIR)\compress.exe Makefile
 	@cl $(CXXFLAGS2) /Fo$(BUILD_DIR)\testdll.obj $(TEST_SRC_DIR)\testdll.cpp
 	@link $(LDFLAGS2) /dll /OUT:$(BUILD_DIR)\testdll.dll /implib:$(BUILD_DIR)\testdll.lib $(BUILD_DIR)\testdll.obj
 	@cl $(CXXFLAGS2) /Fo$(BUILD_DIR)\testdll2.obj $(TEST_SRC_DIR)\testdll2.cpp
 	@link $(LDFLAGS2) /dll /OUT:$(BUILD_DIR)\testdll2.dll /implib:$(BUILD_DIR)\testdll2.lib $(BUILD_DIR)\testdll2.obj
 	@cl $(CXXFLAGS2) /Fo$(BUILD_DIR)\test.obj $(TEST_SRC_DIR)\test.cpp
 	@link $(LDFLAGS2) /OUT:$(BUILD_DIR)\test.exe $(BUILD_DIR)\test.obj $(BUILD_DIR)\testdll.lib $(BUILD_DIR)\testdll2.lib
-	@$(BUILD_DIR)\compress.exe $(BUILD_DIR)\test.c $(BUILD_DIR)\test.exe
-	@cl $(CXXFLAGS) $(BUILD_DIR)\test.c /Fo$(BUILD_DIR)\test.obj
-	@link $(LDFLAGS) /OUT:$(BIN_DIR)\test.exe $(BUILD_DIR)\test.obj $(BUILD_DIR)\pack.lib
 
 $(BUILD_DIR)\compress.exe: $(SRC_DIR)\compress.cpp $(BUILD_DIR)\LzmaLib.lib Makefile
 	@cl $(CXXFLAGS2) /D_LZMA_NO_SYSTEM_SIZE_T /Fo$(BUILD_DIR)\compress.obj $(SRC_DIR)\compress.cpp
@@ -85,7 +95,7 @@ $(BUILD_DIR)\LzmaLib.lib:$(LZMA_CS) $(LZMA_CCS) $(LZMA_HS) Makefile
 	@lib $(LIBFLAGS) /out:$(BUILD_DIR)\LzmaLib.lib $(LZMA_OBJS)
 
 
-.PHONY: all clean
+.PHONY: all clean test pack
 
 clean:
 	@del /s /q $(BUILD_DIR)\*
