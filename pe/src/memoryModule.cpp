@@ -18,12 +18,14 @@
 
 #define AlignValueUp(value, alignment) ((size_t)(value) + (size_t)(alignment) - 1 & ~((size_t)(alignment) - 1))
 
-EXTERN_C bool is_logout = false;
-
-#define LOGF if(is_logout) do { \
+#ifdef DEBUG_OUT
+#define LOGF do { \
     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), __FUNCSIG__, lstrlenA(__FUNCSIG__), NULL, NULL); \
     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), "\n", 1, NULL, NULL); \
 } while(0)
+#else
+#define LOGF (void)0
+#endif
 
 struct LinkNode
 {

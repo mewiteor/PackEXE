@@ -68,7 +68,6 @@ bool Load(size_t i)
 
 EXTERN_C int Main()
 {
-    // is_logout = true;
     size_t size = g_size;
     HANDLE hHeap = GetProcessHeap();
     void *data = HeapAlloc(hHeap, 0, size + 1);
@@ -94,30 +93,33 @@ EXTERN_C int Main()
     size_t cur = sizeof(unsigned long long);
     for(size_t i = 0; i < filesCount; i++)
     {
-        if(is_logout)
+#ifdef DEBUG_OUT
         {
             char buf[0x100];
             wsprintfA(buf, "i: %u\n", (unsigned int)i);
             WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), buf, lstrlenA(buf), NULL, NULL);
         }
+#endif
         files[i].name = p + cur;
         cur += lstrlenA(files[i].name) + 1;
-        if(is_logout)
+#ifdef DEBUG_OUT
         {
             char buf[0x100];
             wsprintfA(buf, "\tname: %s\n", files[i].name);
             WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), buf, lstrlenA(buf), NULL, NULL);
         }
+#endif
         if(cur + sizeof(unsigned long long) > size)
             return 2;
         files[i].size = *(unsigned long long*)(p + cur);
         cur += sizeof(unsigned long long);
-        if(is_logout)
+#ifdef DEBUG_OUT
         {
             char buf[0x100];
             wsprintfA(buf, "\tsize: %u\n", (unsigned int)files[i].size);
             WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), buf, lstrlenA(buf), NULL, NULL);
         }
+#endif
         if(cur + files[i].size > size)
             return 3;
         files[i].data = p + cur;

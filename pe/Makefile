@@ -42,8 +42,12 @@ LZMA_HS=$(LZMA_HS) $(LZMA_SRC_DIR)\Threads.h
 LZMA_HS=$(LZMA_HS) $(LZMA_INCLUDE_DIR)\7zTypes.h
 LZMA_HS=$(LZMA_HS) $(LZMA_INCLUDE_DIR)\LzmaLib.h
 
+DEBUG=
+!ifdef DBG
+DEBUG=/DDEBUG_OUT
+!endif
 
-CXXFLAGS=/nologo /std:c++latest /Oi- /O1 /GS- /Gy- /GR- /c /I$(INCLUDE_DIR) /I$(LZMA_INCLUDE_DIR)
+CXXFLAGS=/nologo /std:c++latest $(DEBUG) /Oi- /O1 /GS- /Gy- /GR- /c /I$(INCLUDE_DIR) /I$(LZMA_INCLUDE_DIR)
 CXXFLAGS2=/nologo /EHsc /std:c++latest /c /I$(LZMA_INCLUDE_DIR)
 CFLAGS=/nologo /Oi- /GS- /Gy- /GR- /c /I$(INCLUDE_DIR) /D_NO_CRT_STDIO_INLINE /I$(LZMA_INCLUDE_DIR)
 LDFLAGS=/nologo /nodefaultlib /incremental:no /subsystem:console,5.01 /entry:Main /safeseh:no /EMITPOGOPHASEINFO /merge:.rdata=.text /align:16
