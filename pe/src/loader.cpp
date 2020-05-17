@@ -68,7 +68,7 @@ bool Load(size_t i)
 
 EXTERN_C int Main()
 {
-    is_logout = true;
+    // is_logout = true;
     size_t size = g_size;
     HANDLE hHeap = GetProcessHeap();
     void *data = HeapAlloc(hHeap, 0, size + 1);
